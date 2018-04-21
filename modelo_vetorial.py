@@ -68,18 +68,21 @@ def gen_tf_idf(tf,idf,n_docs, query = False):
 # Retorna os vetores dos termos por documento e as normas dos documentos
 def calc_vect(tokens, n_docs):
 	docs_norms = np.array([0 for n in range(n_docs)])
-	# lista de vetores dos docs
+	# lista de vetores por docs
 	docs_vect = []
 
 	for n in range(n_docs):
 		# vetor singular do documento
-		doc_vect = []
+		tokens_vect = []
 		for token in tokens:
+			# 
 			w = tokens[token][n]
-			doc_vect.append(w)
+			tokens_vect.append(w)
+			# calculo da norma ( somatorio dos modulos )
 			docs_norms[n] += w*w
-		docs_vect.append(doc_vect)
-
+		docs_vect.append(tokens_vect)
+		docs_norms[n] = math.sqrt(docs_norms[n])
+	# ajuste para caso seja a query a ser calculada. Como sera apenas 1 'doc', é um vetor unico e não uma coleção de vetores por documento.
 	if(n_docs == 1):
 		docs_vect = docs_vect[0]
 
