@@ -39,6 +39,7 @@ def gen_tf_idf(tf,idf,n_docs, query = False):
 	for token in tf:
 		#inicia indice pelo termo
 		weight_matrix[token] = []
+		# se estiver sendo feita a pesagem dos termos dos documentos
 		if not query:
 			for doc in range(n_docs):
 				#verifica se o termo aparece no respectivo doc
@@ -50,6 +51,7 @@ def gen_tf_idf(tf,idf,n_docs, query = False):
 				else:
 					tf_idf = 0
 				weight_matrix[token].append(tf_idf)
+		# se estiver sendo realizado a pesagem da query - que so tem '1' documento
 		else:
 			if(tf[token][0] > 0):
 				# calcula o peso
@@ -62,6 +64,8 @@ def gen_tf_idf(tf,idf,n_docs, query = False):
 
 	return weight_matrix
 
+# Calcula os vetores para os tokens
+# Retorna os vetores dos termos por documento e as normas dos documentos
 def calc_vect(tokens, n_docs):
 	docs_norms = np.array([0 for n in range(n_docs)])
 	# lista de vetores dos docs
@@ -81,8 +85,12 @@ def calc_vect(tokens, n_docs):
 
 	return docs_vect,docs_norms
 
+# Calcula ranking vetorial 
+# Retorna o ranking ordenado dos documentos
 def rank(tokens, q_tokens, n_docs):
+	# O ranking é uma lista de tuplas (peso, numero do documento)
 	rank_docs = [(0,n) for n in range(n_docs)]
+	# Calculo de vetores e normas para os docs e query
 	docs_vect, docs_norms = calc_vect(tokens,n_docs)
 	q_vect, q_norms = calc_vect(q_tokens, 1)
 
@@ -98,28 +106,27 @@ def rank(tokens, q_tokens, n_docs):
 
 	return rank_docs
 
-# def fulfill_query(q_weighted_tokens, weighted_tokens):
-# 	tmp_tokens
-###
 
 if __name__ == '__main__':
 
 	text = ['O peã e o caval são pec de xadrez. O caval é o melhor do jog.', 'A jog envolv a torr, o peã e o rei.', 'O peã lac o boi', 'Caval de rodei!', 'Polic o jog no xadrez.']
 	stopwords = ['a', 'o', 'e', 'é', 'de', 'do', 'no', 'são']
 	q = ['xadrez peã caval torr']
+	
 	# Trata os termos dos docs
 	tokens = normalize(tokenize(text), stopwords)
 	tf, idf = create_index(tokens, text)
 	weighted_tokens = gen_tf_idf(tf, idf, len(text))
 
-	# Trata os termos da consulta
+	# Trata os termos da query
 	query = normalize(tokenize(q), stopwords)
-	
+	# Os tokens da query refletem os tokens gerais + possíveis tokens não listados no texto.
 	q_tokens = tokens + [t for t in query if t not in tokens]
 	q_tf, q_idf = create_index(q_tokens, q)
 
 	q_weighted_tokens = gen_tf_idf(q_tf, q_idf, len(text), query=True)
 
+	### Debug
 	# print weighted_tokens
 	# print q_weighted_tokens
 
