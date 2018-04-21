@@ -17,7 +17,7 @@ def normalize(tokens, stopwords):
 	for phrase in tokens:
 		norm.append([token.lower() for token in phrase if token.lower() not in stopwords])
 
-	return np.unique(np.hstack(np.array(norm)))
+	return np.unique(np.hstack(np.array(norm))).tolist()
 ###
 
 ### Term-frequency e dicionário
@@ -34,16 +34,28 @@ def create_index( tokens, docs):
 
 #Calcula os pesos conforme tf e idf
 # retorna matriz dos pesos de cada termo
-def gen_tf_idf(tf,idf,n_docs):
+def gen_tf_idf(tf,idf,n_docs, query = False):
 	weight_matrix = {}
 	for token in tf:
 		#inicia indice pelo termo
 		weight_matrix[token] = []
-		for doc in range(n_docs):
-			#verifica se o termo aparece no respectivo doc
-			if(tf[token][doc] > 0):
+		if not query:
+			for doc in range(n_docs):
+				#verifica se o termo aparece no respectivo doc
+				if(tf[token][doc] > 0):
+					# calcula o peso
+					x = (1 + math.log(tf[token][doc], 2))
+					y = math.log(float(n_docs)/float(idf[token]), 2)
+					tf_idf =  x * y
+				else:
+					tf_idf = 0
+				weight_matrix[token].append(tf_idf)
+		else:
+			if(tf[token][0] > 0):
 				# calcula o peso
-				tf_idf = (1 + math.log(tf[token][doc], 2)) * math.log(n_docs/idf[token], 2)
+				x = (1 + math.log(tf[token][0], 2))
+				y = math.log(float(n_docs)/float(idf[token]), 2)
+				tf_idf =  x * y
 			else:
 				tf_idf = 0
 			weight_matrix[token].append(tf_idf)
@@ -70,15 +82,14 @@ def calc_vect(tokens, n_docs):
 	return docs_vect,docs_norms
 
 def rank(tokens, q_tokens, n_docs):
-	# rank_docs = [(n,0) for n in n_docs]
-
+	rank_docs = [(0,n) for n in range(n_docs)]
 	docs_vect, docs_norms = calc_vect(tokens,n_docs)
 	q_vect, q_norms = calc_vect(q_tokens, 1)
 
 	for doc in range(n_docs):
-		print docs_vect[doc]
-		print q_vect
-		print "llalalal"
+		# print docs_vect[doc]
+		# print q_vect
+		# print "llalalal"
 		r = np.dot(docs_vect[doc],q_vect)
 		r /= math.sqrt(docs_norms[doc]*q_norms)
 		rank_docs[doc] = (r, doc)
@@ -87,7 +98,8 @@ def rank(tokens, q_tokens, n_docs):
 
 	return rank_docs
 
-
+# def fulfill_query(q_weighted_tokens, weighted_tokens):
+# 	tmp_tokens
 ###
 
 if __name__ == '__main__':
@@ -101,16 +113,23 @@ if __name__ == '__main__':
 	weighted_tokens = gen_tf_idf(tf, idf, len(text))
 
 	# Trata os termos da consulta
-	q_tokens = normalize(tokenize(q), stopwords)
+	query = normalize(tokenize(q), stopwords)
+	
+	q_tokens = tokens + [t for t in query if t not in tokens]
 	q_tf, q_idf = create_index(q_tokens, q)
-	q_weighted_tokens = gen_tf_idf(q_tf, q_idf, len(q))
+
+	q_weighted_tokens = gen_tf_idf(q_tf, q_idf, len(text), query=True)
+
+	# print weighted_tokens
+	# print q_weighted_tokens
 
 	rank_docs = rank(weighted_tokens,q_weighted_tokens,len(text))
 
-	for token in tokens:
-		print str(token) + " |"
-		for doc in text:
-			print str(text.index(doc)) + ": " + str(weighted_tokens[token][text.index(doc)])
-
-
-	print rank_docs
+	# lista do tf-idf de cada token
+	# for token in tokens:
+	# 	print str(token) + " |"
+	# 	for doc in text:
+	# 		print str(text.index(doc)) + ": " + str(weighted_tokens[token][text.index(doc)])
+	print "Score" "\t| " + "Doc No."
+	for rank in rank_docs:
+		print str(rank[0]) + "\t| " + str(rank[1]) 
