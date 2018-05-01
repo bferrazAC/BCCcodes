@@ -109,15 +109,20 @@ def rank(tokens, q_tokens, n_docs):
 
 	return rank_docs
 
+### Probabilistico
+# 
 def estimate_len(doc, tf, index):
 	length = 0
 	for token in tf:
 		length += tf[token][index]
 
 	return length
+
+#
 def bm25(freq, estm_len, avg):
 	return (K1 + 1)*freq / K1*( (1-B) + B*(estm_len/avg) ) +freq
 
+#
 def rank_sim(docs, q_tokens, tf, idf):
 	estm_len = [estimate_len(doc, tf, docs.index(doc)) for doc in docs]
 	print estm_len
